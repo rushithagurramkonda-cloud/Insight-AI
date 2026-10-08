@@ -58,8 +58,10 @@ export function createApp() {
     if (err instanceof SyntaxError && err.status === 400) return res.status(400).json({ message: 'The request body is not valid JSON.', code: 'BAD_JSON' });
     if (err instanceof HttpError) return res.status(err.status).json({ message: err.message, code: err.code });
     if (err.name === 'CastError' || err.name === 'ValidationError') return res.status(400).json({ message: 'Some of the submitted data is invalid.', code: 'BAD_INPUT' });
-    console.error(err);
-    res.status(500).json({ message: 'Something went wrong on the server. Please try again.', code: 'SERVER_ERROR' });
+    console.error(`\n[500] ${req.method} ${req.originalUrl}\n`, err);
+    // In development the real cause is shown in the toast and the terminal. In production it stays generic.
+    const detail = config.isProd ? '' : ` (${err.name}: ${err.message})`;
+    res.status(500).json({ message: `Something went wrong on the server. Please try again.${detail}`, code: 'SERVER_ERROR' });
   });
 
   return app;

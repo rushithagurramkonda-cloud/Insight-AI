@@ -30,8 +30,8 @@ export default function ResumeAnalysis() {
   const input = useRef(null);
 
   useEffect(() => {
-    if (list.data?.resumes?.length && !selected) setSelected((list.data.resumes.find((r) => r.isDefault) || list.data.resumes[0])._id);
-    if (list.data && !list.data.resumes?.length) setSelected(null);
+    if (list.data?.length && !selected) setSelected((list.data.find((r) => r.isDefault) || list.data[0])._id);
+    if (list.data && !list.data.length) setSelected(null);
   }, [list.data, selected]);
 
   const validate = (f) => {
@@ -62,11 +62,15 @@ export default function ResumeAnalysis() {
       toast('Resume analyzed and saved as a new version.', 'success');
       setFile(null);
       setLabel('');
-      await list.reload();
+      // Show the new version immediately, then refresh the list from the server.
+      list.setData((d) => [created, ...(d || []).filter((x) => x._id !== created._id)]);
       setSelected(created._id);
+      list.reload();
     } catch (e) {
       toast(e.message, 'error');
       setFileError(e.message);
+      // The server may have saved the resume even though the reply was lost, so always refresh the list.
+      list.reload();
     } finally {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -111,7 +115,7 @@ export default function ResumeAnalysis() {
   };
 
   const a = detail.data?.analysis;
-  const current = list.data?.resumes?.find((r) => r._id === selected);
+  const current = list.data?.find((r) => r._id === selected);
 
   const copyAll = async () => {
     if (!a) return;
@@ -175,42 +179,31 @@ export default function ResumeAnalysis() {
 
       {/* Versions */}
       <section>
-        <SectionTitle hint="Select a version to view its analysis" right={<Badge tone="brand">{list.data?.resumes?.length || 0} saved</Badge>}>Resume versions</SectionTitle>
-        {list.loading ? <PageLoader /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : !list.data?.resumes?.length ? (
+        <SectionTitle hint="Select a version to view its analysis" right={<Badge tone="brand">{list.data?.length || 0} saved</Badge>}>Resume versions</SectionTitle>
+        {list.loading ? <PageLoader /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : !list.data.length ? (
           <EmptyState icon={FileText} title="No resumes yet" text="Upload your first PDF above to get your score and suggestions." />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {list.data.resumes.map((r) => (
+            {list.data.map((r) => (
               <Card key={r._id} className={cx('p-4 transition-shadow', selected === r._id && 'ring-2 ring-brand/60')}>
                 <button className="block w-full text-left" onClick={() => setSelected(r._id)} aria-pressed={selected === r._id}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-ink">
-                        {r.versionLabel || r.fileName}
-                      </p>
-                      <p className="text-xs text-ink-mute">
-                        Uploaded {formatDate(r.createdAt)}
-                      </p>
+                      <p className="truncate text-sm font-semibold text-ink">{r.label}</p>
+                      <p className="text-xs text-ink-mute">Uploaded {formatDate(r.date)}</p>
                     </div>
                     {r.isDefault && <Badge tone="brand"><Star className="h-3 w-3" /> Default</Badge>}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <Chip>Resume</Chip>
-                    <Chip>AI Analyzed</Chip>
-                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">{r.tags.map((t) => <Chip key={t}>{t}</Chip>)}</div>
                   <div className="mt-3 flex items-center gap-3 text-xs text-ink-soft">
-                    <span>
-                      Score <b className="text-ink">{r.analysis?.scores?.resume ?? '—'}</b>
-                    </span>
-                    <span>
-                      ATS <b className="text-ink">{r.analysis?.scores?.ats ?? '—'}</b>
-                    </span>
+                    <span>Score <b className="text-ink">{r.score}</b></span>
+                    <span>ATS <b className="text-ink">{r.ats}</b></span>
                   </div>
                 </button>
                 <div className="mt-3 flex flex-wrap gap-1 border-t border-line pt-3">
                   {!r.isDefault && <Button size="sm" variant="ghost" onClick={() => setDefault(r._id)}>Set as default</Button>}
-                  <Button size="sm" variant="ghost" icon={Pencil} onClick={() => setRename({ id: r._id, label: r.versionLabel || r.fileName })} aria-label={`Rename ${r.label}`}>Rename</Button>
-                  <Button size="sm" variant="ghost" icon={Trash2} className="text-red-600 hover:bg-red-50" onClick={() => setDel(r)} aria-label={`Delete ${r.versionLabel || r.fileName}`}>Delete</Button>
+                  <Button size="sm" variant="ghost" icon={Pencil} onClick={() => setRename({ id: r._id, label: r.label })} aria-label={`Rename ${r.label}`}>Rename</Button>
+                  <Button size="sm" variant="ghost" icon={Trash2} className="text-red-600 hover:bg-red-50" onClick={() => setDel(r)} aria-label={`Delete ${r.label}`}>Delete</Button>
                 </div>
               </Card>
             ))}

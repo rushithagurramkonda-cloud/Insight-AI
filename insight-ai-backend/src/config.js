@@ -20,8 +20,8 @@ export const config = {
     maxRepos: Math.min(10, Number(process.env.GITHUB_MAX_REPOS) || 5),
   },
   adminUsernames: list(process.env.ADMIN_GITHUB_USERNAMES),
-  gemini: { key: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || 'gemini-3.8-flash' },
-  storageDir: fileURLToPath(new URL('../storage/', import.meta.url)),
+  gemini: { key: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL || 'gemini-3.5-flash' },
+  storageDir: fileURLToPath(new URL('../storage/', import.meta.url)), // works on Windows too
 };
 
 export function assertConfig() {

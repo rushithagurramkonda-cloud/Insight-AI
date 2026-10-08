@@ -1,10 +1,4 @@
-node_modules/
+node_modules
 .env
-.env.local
-.env.*.local
-dist/
-build/
-__pycache__/
-*.pyc
-.venv/
-venv/
+storage/*
+!storage/.gitkeep
