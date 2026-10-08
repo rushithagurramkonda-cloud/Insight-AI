@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-surface text-ink font-sans antialiased; }
+  :focus-visible { @apply outline-none ring-2 ring-brand/40 ring-offset-1; }
+}
+
+@layer components {
+  .input { @apply w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-mute/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20; }
+  .label { @apply mb-1 block text-xs font-medium text-ink-soft; }
+  .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll-thin::-webkit-scrollbar-thumb { @apply rounded bg-line; }
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(0,64,78,.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,64,78,.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
